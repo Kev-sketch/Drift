@@ -13,3 +13,6 @@ __pycache__/
 *.provisionprofile
 *.p12
 *.mobileprovision
+
+# Rust build cache (large, machine-specific)
+rust/target/
