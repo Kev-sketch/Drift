@@ -3,12 +3,12 @@
 probe.
 
 Build first (`./build.sh`), then `python3 Tests/extension_new_window.py`.
-It runs a copy of build/Search.app under a bundle id of its own, hidden, in
+It runs a copy of build/Drift.app under a bundle id of its own, hidden, in
 a world of its own with split_view.py's harness; the copy, its WebKit
 folders and the world are removed afterwards.
 
 Claude in Chrome starts by making a window (windows.create, about:blank)
-and grouping the first of the tabs it is given back. In Search a window
+and grouping the first of the tabs it is given back. In Drift a window
 also holds the space's pins, so that list began with the pins, and the
 group was refused. What is checked:
 
@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import split_view as sv  # noqa: E402
 
 sv.use("extension-new-window")
-BUNDLE = "com.officecommun.search.newwindow"
+BUNDLE = "com.kevsketch.drift.newwindow"
 work = Path(tempfile.mkdtemp(prefix="search-newwindow-"))
 
 FILES = {
@@ -69,11 +69,11 @@ ASK = """(function (ext) {
 
 
 def probe_copy():
-    app = work / "Search.app"
-    shutil.copytree(Path(sv.ROOT, "build", "Search.app"), app, symlinks=True)
+    app = work / "Drift.app"
+    shutil.copytree(Path(sv.ROOT, "build", "Drift.app"), app, symlinks=True)
     subprocess.run(["/usr/libexec/PlistBuddy", "-c", f"Set :CFBundleIdentifier {BUNDLE}", str(app / "Contents/Info.plist")], check=True)
     (app / "Contents/embedded.provisionprofile").unlink(missing_ok=True)
-    subprocess.run(["codesign", "-f", "-s", "-", "--entitlements", str(Path(sv.ROOT, "Search.entitlements")), "--deep", str(app)],
+    subprocess.run(["codesign", "-f", "-s", "-", "--entitlements", str(Path(sv.ROOT, "Drift.entitlements")), "--deep", str(app)],
                    check=True, capture_output=True)
     return str(app)
 
@@ -100,7 +100,7 @@ def main():
         t.ok("the extension loads", ext is not None)
         if not ext: return t
 
-        # Two pins in the space, as Search's every window then shows.
+        # Two pins in the space, as Drift's every window then shows.
         for name in ("pin-one", "pin-two"):
             sv.cmd({"do": "pin", "id": sv.page(name)})
         listed = sv.page("listed")

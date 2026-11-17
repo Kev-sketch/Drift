@@ -97,7 +97,7 @@ def main():
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{server.server_port}"
-    source = (ROOT / "Sources/Search/Float.swift").read_text()
+    source = (ROOT / "Sources/Drift/Float.swift").read_text()
     start = source.index('static let on = """') + len('static let on = """')
     isolate = source[start:source.index('"""', start)].strip().replace("\\\\", "\\")
     start = source.index('static let off = """') + len('static let off = """')
@@ -145,7 +145,7 @@ def main():
         # The mark on the video is defended (Isolate.on): put back when a
         # player takes it off or rebuilds itself, and looked for when
         # something changes — not four times a second, changed or not. The
-        # looks are counted in Search's own world, where the script runs.
+        # looks are counted in Drift's own world, where the script runs.
         tab = sv.sp("open", url=f"{base}/plain.html")["resultID"]
         # Only a playing video is marked: floated once it plays.
         playing = "(function(){var v=document.querySelector('video');return !!v&&!v.paused&&v.readyState>=2})()"

@@ -3,8 +3,8 @@
 tab groups, in a hidden probe.
 
 Build first (`./build.sh`), then `python3 Tests/external_messaging.py`. It
-runs a copy of build/Search.app under a bundle id of its own (WebKit stops
-an extension's worker a few seconds after it starts under Search's real id
+runs a copy of build/Drift.app under a bundle id of its own (WebKit stops
+an extension's worker a few seconds after it starts under Drift's real id
 in a test run), in a world of its own with split_view.py's harness, started
 hidden; the copy, its WebKit folders and the world are removed afterwards.
 
@@ -23,7 +23,7 @@ function. What is checked:
 - chrome.tabs.group makes a group and tabGroups.query finds it, so a
   second call reuses it (Claude in Chrome can't act on a tab outside a
   group of its own). Tab groups are always on since the Settings rework
-  (5e8ea674, no switch): an "off" stored by an older Search changes
+  (5e8ea674, no switch): an "off" stored by an older Drift changes
   nothing, the column draws the group's heading, and folded the group
   keeps its tabs and the extension still finds it.
 """
@@ -40,7 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import split_view as sv  # noqa: E402
 
 sv.use("external-messaging")
-BUNDLE = "com.officecommun.search.exttest"
+BUNDLE = "com.kevsketch.drift.exttest"
 work = Path(tempfile.mkdtemp(prefix="search-external-"))
 NOWHERE = "abcdefghijklmnopabcdefghijklmnop"
 
@@ -112,12 +112,12 @@ LOOP = """(async function (ids) {
 
 
 def probe_copy():
-    """build/Search.app under a bundle id of its own, signed ad hoc."""
-    app = work / "Search.app"
-    shutil.copytree(Path(sv.ROOT, "build", "Search.app"), app, symlinks=True)
+    """build/Drift.app under a bundle id of its own, signed ad hoc."""
+    app = work / "Drift.app"
+    shutil.copytree(Path(sv.ROOT, "build", "Drift.app"), app, symlinks=True)
     subprocess.run(["/usr/libexec/PlistBuddy", "-c", f"Set :CFBundleIdentifier {BUNDLE}", str(app / "Contents/Info.plist")], check=True)
     (app / "Contents/embedded.provisionprofile").unlink(missing_ok=True)
-    subprocess.run(["codesign", "-f", "-s", "-", "--entitlements", str(Path(sv.ROOT, "Search.entitlements")), "--deep", str(app)],
+    subprocess.run(["codesign", "-f", "-s", "-", "--entitlements", str(Path(sv.ROOT, "Drift.entitlements")), "--deep", str(app)],
                    check=True, capture_output=True)
     return str(app)
 
@@ -152,7 +152,7 @@ def main():
     for name, body in FILES.items(): (folder / name).write_text(body)
     sv.APP = probe_copy()
     try:
-        # An "off" left by a Search from before groups were always on.
+        # An "off" left by a Drift from before groups were always on.
         sv.setup(sidebar=True, **{"tabs.groups": False})
         sv.launch()
         sv.cmd({"do": "ext-folder", "path": str(folder), "yes": True})
@@ -196,7 +196,7 @@ def main():
         t.ok("the extension heard every message meant for it, and nothing else",
              heard and heard["reply"] == ["ping", "later", "async", "ping", "heard"], heard)
 
-        # Tab groups: always on, whatever an older Search stored.
+        # Tab groups: always on, whatever an older Drift stored.
         second = sv.page("second")
         time.sleep(1)
         before = column("before")

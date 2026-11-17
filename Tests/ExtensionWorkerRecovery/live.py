@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Bounded live WebKit worker-port checks, using a disposable hidden Search.
+"""Bounded live WebKit worker-port checks, using a disposable hidden Drift.
 
-Build Search.app first (on Intel, copy build/intel/Search.app to build/Search.app)
+Build Drift.app first (on Intel, copy build/intel/Drift.app to build/Drift.app)
 then run: python3 Tests/ExtensionWorkerRecovery/live.py
 
 Uses split_view's isolated SEARCH_PROBE lifecycle and the existing bench
@@ -11,10 +11,10 @@ traffic is local. Exit 0 means the assertions ran and passed, not just that the
 app built. Exit 2 means a precondition was unavailable.
 
 The explicit revive cases deliberately withhold APPLICATION replies, leaving
-Search's ping responder healthy. They prove native unload/reload delivery to real
+Drift's ping responder healthy. They prove native unload/reload delivery to real
 ports; they do not prove dead-worker detection or background.wake's failed-start
 recovery branch. A separate short real event-loop stall checks delayed responses
-without changing Search's timeouts. Truly hung workers and delayed startup remain
+without changing Drift's timeouts. Truly hung workers and delayed startup remain
 manual coverage; the final report says so explicitly.
 """
 
@@ -34,7 +34,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-APP = ROOT / 'build' / 'Search.app'
+APP = ROOT / 'build' / 'Drift.app'
 ATTRIBUTE = 'data-search-port-fixture'
 WORKER_READY_PREFIX = 'fixture-worker-ready:'
 TOTAL_TIMEOUT = 504
@@ -173,7 +173,7 @@ else:
 
 def lldb_command(debugger, app, world, support):
     support = Path(support)
-    executable = Path(app) / 'Contents/MacOS/Search'
+    executable = Path(app) / 'Contents/MacOS/Drift'
     pid_path = support / 'lldb-owned-process.json'
     record = ("script import json, os, lldb; t=lldb.debugger.GetSelectedTarget(); p=t.GetProcess(); "
               "f=t.GetExecutable(); " +
@@ -185,7 +185,7 @@ def lldb_command(debugger, app, world, support):
                '--one-line', 'settings set target.disable-aslr false',
                '--one-line', 'settings set target.env-vars ' + json.dumps('SEARCH_PROBE=' + world)]
     # The copied Intel app may have its matching dSYM beside the original.
-    relative = Path('Search.app.dSYM/Contents/Resources/DWARF/Search')
+    relative = Path('Drift.app.dSYM/Contents/Resources/DWARF/Drift')
     candidates = [Path(app).parent / relative, Path(app).parent / 'intel' / relative]
     if platform.machine() == 'x86_64':
         candidates.reverse()
@@ -202,7 +202,7 @@ def lldb_owned_pid(text, app):
     try:
         data = json.loads(text)
         pid = data['pid']
-        if type(pid) is int and 1 < pid < 2 ** 31 and Path(data['executable']).resolve() == (Path(app) / 'Contents/MacOS/Search').resolve():
+        if type(pid) is int and 1 < pid < 2 ** 31 and Path(data['executable']).resolve() == (Path(app) / 'Contents/MacOS/Drift').resolve():
             return pid
     except (ValueError, TypeError, KeyError):
         pass
@@ -255,24 +255,24 @@ def owned_report(text, *, pids, launched_at, modified_at, app):
     if report is not None:
         pid, name, path = report.get('pid'), report.get('procName'), report.get('procPath')
     else:
-        process = re.search(r'^Process:\s+Search\s+\[(\d+)\]', text, re.MULTILINE)
+        process = re.search(r'^Process:\s+Drift\s+\[(\d+)\]', text, re.MULTILINE)
         path_match = re.search(r'^Path:\s+(.+)$', text, re.MULTILINE)
         if not process or not path_match:
             return None
-        pid, name, path = process.group(1), 'Search', path_match.group(1).strip()
+        pid, name, path = process.group(1), 'Drift', path_match.group(1).strip()
     try:
         pid = int(pid)
     except (TypeError, ValueError):
         return None
-    if pid not in pids or name != 'Search':
+    if pid not in pids or name != 'Drift':
         return None
     # Some .ips versions omit procPath; PID + process name + launch time still
     # identify our captured process. A supplied path must match our app exactly.
-    if path and Path(path).resolve() != (Path(app) / 'Contents/MacOS/Search').resolve():
+    if path and Path(path).resolve() != (Path(app) / 'Contents/MacOS/Drift').resolve():
         # macOS may redact home-directory components even in local reports.
         # Keep PID + timestamp + process-name scoping when that exact app
         # suffix is intact; never accept a different explicit executable.
-        redacted = ('*' in path or '/USER/' in path) and path.endswith('/Search.app/Contents/MacOS/Search')
+        redacted = ('*' in path or '/USER/' in path) and path.endswith('/Drift.app/Contents/MacOS/Drift')
         if not redacted:
             return None
     return report if report is not None else {'pid': pid, 'procName': name, 'legacy': text[:24000]}
@@ -298,16 +298,16 @@ def summarize_report(report):
     images = report.get('usedImages') or []
     wanted = {frame.get('imageIndex') for frame in frames}
     result['relevantImages'] = [dict(imageIndex=i, **image) for i, image in enumerate(images)
-                                if i in wanted or image.get('name') == 'Search']
+                                if i in wanted or image.get('name') == 'Drift']
     return result
 
 
 def search_addresses(report):
-    """Only the owned process's Search executable, never framework frames."""
+    """Only the owned process's Drift executable, never framework frames."""
     summary = summarize_report(report)
     frames = summary.get('faultingThreadDetails', {}).get('frames', [])
     for index, image in enumerate(report.get('usedImages') or []):
-        if image.get('name') != 'Search' or not image.get('path', '').endswith('/Search.app/Contents/MacOS/Search'):
+        if image.get('name') != 'Drift' or not image.get('path', '').endswith('/Drift.app/Contents/MacOS/Drift'):
             continue
         base = image.get('base')
         try:
@@ -331,17 +331,17 @@ def search_addresses(report):
 def symbolicate_report(report, app):
     selected = search_addresses(report)
     if selected is None:
-        print('SEARCH_SYMBOLICATION unavailable: no owned Search frames with image offsets', flush=True)
+        print('SEARCH_SYMBOLICATION unavailable: no owned Drift frames with image offsets', flush=True)
         return
     image, base, addresses = selected
     build = Path(app).parent
-    relative = Path('Search.app.dSYM/Contents/Resources/DWARF/Search')
+    relative = Path('Drift.app.dSYM/Contents/Resources/DWARF/Drift')
     candidates = [build / relative, build / 'intel' / relative]
     if platform.machine() == 'x86_64':
         candidates.reverse()
     dwarf = next((path for path in candidates if path.is_file()), None)
     if dwarf is None:
-        print('SEARCH_SYMBOLICATION unavailable: release Search dSYM missing', flush=True)
+        print('SEARCH_SYMBOLICATION unavailable: release Drift dSYM missing', flush=True)
         return
     command = ['/usr/bin/atos', '-arch', platform.machine(), '-o', str(dwarf), '-l', hex(base)]
     command.extend(hex(address) for address in addresses)
@@ -363,7 +363,7 @@ def capture_os_reports(*, pids, launched_at, app, wait=20):
     while True:
         candidates = []
         for directory in directories:
-            for pattern in ('Search*.ips', 'Search*.crash'):
+            for pattern in ('Drift*.ips', 'Drift*.crash'):
                 try:
                     for path in directory.glob(pattern):
                         stat = path.stat()
@@ -398,22 +398,22 @@ def capture_os_reports(*, pids, launched_at, app, wait=20):
 
 
 def self_test():
-    app = Path('/tmp/search-live-self-test/Search.app')
-    report = {'pid': 123, 'procName': 'Search', 'procPath': str(app / 'Contents/MacOS/Search'),
+    app = Path('/tmp/search-live-self-test/Drift.app')
+    report = {'pid': 123, 'procName': 'Drift', 'procPath': str(app / 'Contents/MacOS/Drift'),
               'exception': {'type': 'EXC_BAD_ACCESS'}, 'faultingThread': 0,
               'threads': [{'triggered': True, 'frames': [{'imageIndex': 0, 'symbol': 'testFrame'}]}],
-              'usedImages': [{'name': 'Search', 'path': str(app / 'Contents/MacOS/Search')}]}
-    text = json.dumps({'app_name': 'Search'}) + '\n' + json.dumps(report)
+              'usedImages': [{'name': 'Drift', 'path': str(app / 'Contents/MacOS/Drift')}]}
+    text = json.dumps({'app_name': 'Drift'}) + '\n' + json.dumps(report)
     arguments = dict(pids={123}, launched_at=100.0, modified_at=101.0, app=app)
     assert owned_report(text, **arguments) == report
     assert owned_report(text, **dict(arguments, pids={456})) is None
     assert owned_report(text, **dict(arguments, pids=set())) is None
     assert owned_report(text, **dict(arguments, modified_at=99.9)) is None
-    assert owned_report(text, **dict(arguments, app=Path('/tmp/other/Search.app'))) is None
+    assert owned_report(text, **dict(arguments, app=Path('/tmp/other/Drift.app'))) is None
     assert owned_report(json.dumps(dict(report, procName='Other')), **arguments) is None
-    redacted = dict(report, procPath='/Users/USER/*/Search.app/Contents/MacOS/Search')
+    redacted = dict(report, procPath='/Users/USER/*/Drift.app/Contents/MacOS/Drift')
     assert owned_report(json.dumps(redacted), **arguments) == redacted
-    legacy = f'Process: Search [123]\nPath: {app}/Contents/MacOS/Search\nException Type: EXC_CRASH'
+    legacy = f'Process: Drift [123]\nPath: {app}/Contents/MacOS/Drift\nException Type: EXC_CRASH'
     assert owned_report(legacy, **arguments)['pid'] == 123
     assert owned_report('not a report', **arguments) is None
     summary = summarize_report(report)
@@ -448,9 +448,9 @@ def self_test():
     assert '--one-line-on-crash' in command
     assert 'range(min(p.GetNumThreads(), 32))' in lldb_capture_command()
     assert 'thread backtrace --count 48' in lldb_capture_command()
-    assert lldb_owned_pid(json.dumps({'pid': 123, 'executable': str(app / 'Contents/MacOS/Search')}), app) == 123
-    assert lldb_owned_pid(json.dumps({'pid': 123, 'executable': '/tmp/unrelated/Search'}), app) is None
-    assert lldb_owned_pid(json.dumps({'pid': True, 'executable': str(app / 'Contents/MacOS/Search')}), app) is None
+    assert lldb_owned_pid(json.dumps({'pid': 123, 'executable': str(app / 'Contents/MacOS/Drift')}), app) == 123
+    assert lldb_owned_pid(json.dumps({'pid': 123, 'executable': '/tmp/unrelated/Drift'}), app) is None
+    assert lldb_owned_pid(json.dumps({'pid': True, 'executable': str(app / 'Contents/MacOS/Drift')}), app) is None
     assert lldb_owned_pid('incomplete', app) is None
     assert lldb_launch_error('error: Operation not permitted').startswith('BLOCKED:')
     assert not lldb_launch_error('target stopped').startswith('BLOCKED:')
@@ -567,7 +567,7 @@ class Live:
                 socket.unlink()
             self.output_paths = {stream: support / ('direct-' + stream + '.log') for stream in ('stdout', 'stderr')}
             with self.output_paths['stdout'].open('wb') as stdout, self.output_paths['stderr'].open('wb') as stderr:
-                self.process = subprocess.Popen([str(APP / 'Contents/MacOS/Search')],
+                self.process = subprocess.Popen([str(APP / 'Contents/MacOS/Drift')],
                                                 env=direct_environment(self.sv.W), cwd=ROOT,
                                                 stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr)
             self.owned_pids.add(self.process.pid)
@@ -607,7 +607,7 @@ class Live:
         self.lldb_pid_path = support / 'lldb-owned-process.json'
         self.lldb_paths = {name: support / ('lldb-' + name + '.log') for name in ('transcript', 'stdout', 'stderr')}
         command = lldb_command(debugger, APP, self.sv.W, support)
-        print('LLDB_LAUNCH', json.dumps({'debugger': str(debugger), 'executable': str(APP / 'Contents/MacOS/Search'),
+        print('LLDB_LAUNCH', json.dumps({'debugger': str(debugger), 'executable': str(APP / 'Contents/MacOS/Drift'),
               'probe': self.sv.W, 'attach': False, 'maxThreads': LLDB_MAX_THREADS, 'maxFramesPerThread': LLDB_MAX_FRAMES}), flush=True)
         with self.lldb_paths['transcript'].open('wb') as transcript:
             self.debugger = subprocess.Popen(command, cwd=ROOT, env=direct_environment(self.sv.W),
@@ -624,7 +624,7 @@ class Live:
             print('LLDB_LAUNCH_OUTPUT', output, flush=True)
             raise Failure(lldb_launch_error(output))
         if not self.owned_pids:
-            raise Failure('BLOCKED: LLDB did not confirm its launched Search PID')
+            raise Failure('BLOCKED: LLDB did not confirm its launched Drift PID')
         time.sleep(2)
 
     def lldb_diagnostics(self):
@@ -651,7 +651,7 @@ class Live:
     def finish_lldb(self):
         if self.debugger is None:
             return
-        # Ordinary sv.finish first asks the owned Search to quit. If it is
+        # Ordinary sv.finish first asks the owned Drift to quit. If it is
         # stopped, interrupt only our debugger so its stop hook captures and
         # kills its own launched inferior. Never attach or signal by name.
         try:
@@ -861,16 +861,16 @@ class Live:
         self.assert_ports(name, generations, retired)
 
     def setup_pages(self, base):
-        # Admission during Search's initial asynchronous scan can race a
+        # Admission during Drift's initial asynchronous scan can race a
         # second load of the newly installed extension. Await its real state,
         # not a guessed sleep, before adding the fixture to this empty profile.
         self.poll('extension startup scan completed', self.extension_state,
                   lambda data: data.get('started') is True and not data.get('busy'), timeout=60)
         self.sv.cmd({'do': 'ext-folder', 'path': str(HERE / 'extension'), 'yes': True})
         status = self.poll('local fixture installation', self.extension_state,
-                           lambda data: any(item['name'] == 'Search Worker Recovery Fixture' and item['loaded']
+                           lambda data: any(item['name'] == 'Drift Worker Recovery Fixture' and item['loaded']
                                             for item in data['extensions']), timeout=30)
-        installed = [item for item in status['extensions'] if item['name'] == 'Search Worker Recovery Fixture']
+        installed = [item for item in status['extensions'] if item['name'] == 'Drift Worker Recovery Fixture']
         self.check('only the local fixture is installed in isolated profile', len(status['extensions']) == 1 and len(installed) == 1,
                    status, fatal=True)
         self.extension = installed[0]['id']
@@ -1118,8 +1118,8 @@ def main(argv=None):
     if tuple(int(part) for part in platform.mac_ver()[0].split('.')[:2]) < (15, 4):
         print('NOT RUN: WKWebExtension requires macOS 15.4 or newer.', flush=True)
         return 2
-    if not (APP / 'Contents/MacOS/Search').is_file():
-        print(f'NOT RUN: built app missing at {APP}; build first (copy build/intel/Search.app here on Intel).', flush=True)
+    if not (APP / 'Contents/MacOS/Drift').is_file():
+        print(f'NOT RUN: built app missing at {APP}; build first (copy build/intel/Drift.app here on Intel).', flush=True)
         return 2
     signal.signal(signal.SIGALRM, expired)
     signal.alarm(LLDB_WORK_TIMEOUT if options.lldb_launch else WORK_TIMEOUT)
@@ -1138,7 +1138,7 @@ def main(argv=None):
     try:
         sv.setup()
         live.launch(direct=options.direct_launch, lldb=options.lldb_launch)
-        live.check('isolated hidden Search bench is available', Path(sv.SOCK).exists(), sv.SOCK, fatal=True)
+        live.check('isolated hidden Drift bench is available', Path(sv.SOCK).exists(), sv.SOCK, fatal=True)
         base = f'http://127.0.0.1:{server.server_port}'
         if options.admission_only:
             live.setup_pages(base)

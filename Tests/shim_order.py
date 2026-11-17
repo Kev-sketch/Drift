@@ -2,7 +2,7 @@
 """Does a content_scripts entry placed first run before the later entries,
 in every frame?
 
-That is the one question that decides the fix for #997. Search prepends
+That is the one question that decides the fix for #997. Drift prepends
 search-shim.js to *every* content_scripts entry (ExtensionShims.swift:130),
 so a 229 KB shim is parsed once per entry per frame. Injecting it once, as a
 single entry at index 0, is a far smaller change than splitting it, but it is
@@ -43,7 +43,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import split_view as sv  # noqa: E402
 
 sv.use("shim-order")
-BUNDLE = "com.officecommun.search.shimorder"
+BUNDLE = "com.kevsketch.drift.shimorder"
 work = Path(tempfile.mkdtemp(prefix="search-shimorder-"))
 
 ENTRIES = 3
@@ -145,14 +145,14 @@ for w in WORLDS:
 
 
 def probe_copy():
-    """build/Search.app under a bundle id of its own, signed ad hoc."""
-    app = work / "Search.app"
-    shutil.copytree(Path(sv.ROOT, "build", "Search.app"), app, symlinks=True)
+    """build/Drift.app under a bundle id of its own, signed ad hoc."""
+    app = work / "Drift.app"
+    shutil.copytree(Path(sv.ROOT, "build", "Drift.app"), app, symlinks=True)
     subprocess.run(["/usr/libexec/PlistBuddy", "-c", f"Set :CFBundleIdentifier {BUNDLE}",
                     str(app / "Contents/Info.plist")], check=True)
     (app / "Contents/embedded.provisionprofile").unlink(missing_ok=True)
     subprocess.run(["codesign", "-f", "-s", "-", "--entitlements",
-                    str(Path(sv.ROOT, "Search.entitlements")), "--deep", str(app)],
+                    str(Path(sv.ROOT, "Drift.entitlements")), "--deep", str(app)],
                    check=True, capture_output=True)
     return str(app)
 

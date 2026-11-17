@@ -60,7 +60,7 @@ def site(t, name, url, selector):
         print(f"  skip  {name}: no link found (didn't load?)"); return
     time.sleep(0.8)
     # A page can keep the right button for itself: no menu comes up, in
-    # Search as in Safari, and there is nothing to choose.
+    # Drift as in Safari, and there is nothing to choose.
     sv.ev(tab, """(function () { window.__menuKept = false;
       window.addEventListener('contextmenu', function (e) {
         setTimeout(function () { window.__menuKept = e.defaultPrevented; }, 0); }, true); return 1 })()""")

@@ -2,12 +2,12 @@
 """The Chrome version extensions see is a current one (#685).
 
 Build first (`./build.sh`), then `python3 Tests/extension_chrome_version.py`.
-It runs a copy of build/Search.app under a bundle id of its own, hidden, in
+It runs a copy of build/Drift.app under a bundle id of its own, hidden, in
 a world of its own with split_view.py's harness; the copy, its WebKit
 folders and the world are removed afterwards.
 
 1Password asks for its popup to unlock (action.openPopup) only from Chrome
-149, read from navigator.userAgent; Search said 140, and the 1Password
+149, read from navigator.userAgent; Drift said 140, and the 1Password
 button in a field did nothing while 1Password was locked. An extension page
 here reads what an extension reads.
 """
@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import split_view as sv  # noqa: E402
 
 sv.use("bug-chrome-version")
-BUNDLE = "com.officecommun.search.chromeversion"
+BUNDLE = "com.kevsketch.drift.chromeversion"
 work = Path(tempfile.mkdtemp(prefix="search-chromeversion-"))
 FILES = {
     "manifest.json": json.dumps({
@@ -36,11 +36,11 @@ FILES = {
 
 
 def probe_copy():
-    app = work / "Search.app"
-    shutil.copytree(Path(sv.ROOT, "build", "Search.app"), app, symlinks=True)
+    app = work / "Drift.app"
+    shutil.copytree(Path(sv.ROOT, "build", "Drift.app"), app, symlinks=True)
     subprocess.run(["/usr/libexec/PlistBuddy", "-c", f"Set :CFBundleIdentifier {BUNDLE}", str(app / "Contents/Info.plist")], check=True)
     (app / "Contents/embedded.provisionprofile").unlink(missing_ok=True)
-    subprocess.run(["codesign", "-f", "-s", "-", "--entitlements", str(Path(sv.ROOT, "Search.entitlements")), "--deep", str(app)],
+    subprocess.run(["codesign", "-f", "-s", "-", "--entitlements", str(Path(sv.ROOT, "Drift.entitlements")), "--deep", str(app)],
                    check=True, capture_output=True)
     return str(app)
 

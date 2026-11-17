@@ -3,8 +3,8 @@ import Darwin
 import Foundation
 import WebKit
 
-/// Search's own world, as the app defines it (Web.swift).
-enum Web { @MainActor static let world = WKContentWorld.world(name: "Search") }
+/// Drift's own world, as the app defines it (Web.swift).
+enum Web { @MainActor static let world = WKContentWorld.world(name: "Drift") }
 
 @MainActor
 private final class PageFindHarness: NSObject, NSApplicationDelegate {
@@ -189,12 +189,12 @@ private final class PageFindHarness: NSObject, NSApplicationDelegate {
         })()
         """)
         let frameHit = await update("frameword")
-        expect(frameHit, count: 1, index: 1, "Search includes a same-origin iframe")
+        expect(frameHit, count: 1, index: 1, "Drift includes a same-origin iframe")
         let frameSelected = (try? await evaluate("document.querySelector('#frame').contentWindow.getSelection().toString()")) as? String
         check(frameSelected == "frameword", "The current iframe match is selected in its own frame")
 
         let mainHit = await update("farendword")
-        expect(mainHit, count: 1, index: 1, "Search can move from an iframe hit back to the main document")
+        expect(mainHit, count: 1, index: 1, "Drift can move from an iframe hit back to the main document")
         let restoredFrame = (try? await evaluate("document.querySelector('#frame').contentWindow.getSelection().toString()")) as? String
         let mainSelected = (try? await evaluate("window.getSelection().toString()")) as? String
         check(restoredFrame == "originalframe", "Moving out of the frame restores its prior selection")

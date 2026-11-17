@@ -85,11 +85,11 @@ try:
     little(f"{sv.BASE}/kept"); time.sleep(1.5)
     little("keep"); time.sleep(0.5)
     st = little("look")
-    t.ok("Open in Search moves the page into the row", "127.0.0.1" in st["tabs"] and st["littles"] == [], st)
+    t.ok("Open in Drift moves the page into the row", "127.0.0.1" in st["tabs"] and st["littles"] == [], st)
 
     # Three windows, each with a page, written down; then a launch made by a
     # small window's link. Every window stays, off screen, and nothing is
-    # written out of windows.json — before Open in Search, through a quit
+    # written out of windows.json — before Open in Drift, through a quit
     # without it, and after it.
     for n, name in [(2, "two"), (3, "three")]:
         windows(action="new"); windows(action="front", n=n)
@@ -115,7 +115,7 @@ try:
     launch_with(f"{sv.BASE}/linked")
     little("keep"); time.sleep(1)
     st = windows()
-    t.ok("Open in Search brings them all back", not st["keptAway"] and len(st["windows"]) == 3
+    t.ok("Open in Drift brings them all back", not st["keptAway"] and len(st["windows"]) == 3
          and not any(w["away"] for w in st["windows"]), st["windows"])
     t.ok("with the page in the row", any(f"{sv.BASE}/linked" in w["tabs"] for w in st["windows"]), st["windows"])
     sv.quit()

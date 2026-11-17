@@ -6,22 +6,22 @@
 #   brew install --cask driceroland/tap/search
 #
 # installs the one for the Mac it runs on, and brew upgrade brings it. Run it
-# once the release is on GitHub (tag vX.Y.Z, Search.dmg for Apple Silicon and
-# Search-Intel.dmg for Intel attached); it reads the version from VERSION.
+# once the release is on GitHub (tag vX.Y.Z, Drift.dmg for Apple Silicon and
+# Drift-Intel.dmg for Intel attached); it reads the version from VERSION.
 set -euo pipefail
 
 cd "$(dirname "$0")"
 VERSION="$(tr -d '[:space:]' < VERSION)"
-BASE="https://github.com/driceroland/Search/releases/download/v$VERSION"
+BASE="https://github.com/Kev-sketch/Drift/releases/download/v$VERSION"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-for DMG in Search.dmg Search-Intel.dmg; do
+for DMG in Drift.dmg Drift-Intel.dmg; do
   curl -fsSL -o "$WORK/$DMG" "$BASE/$DMG" \
     || { echo "no $DMG on the v$VERSION release yet — publish the release first" >&2; exit 1; }
 done
-ARM="$(shasum -a 256 "$WORK/Search.dmg" | cut -d' ' -f1)"
-INTEL="$(shasum -a 256 "$WORK/Search-Intel.dmg" | cut -d' ' -f1)"
+ARM="$(shasum -a 256 "$WORK/Drift.dmg" | cut -d' ' -f1)"
+INTEL="$(shasum -a 256 "$WORK/Drift-Intel.dmg" | cut -d' ' -f1)"
 
 git clone -q https://github.com/driceroland/homebrew-tap.git "$WORK/tap"
 CASK="$WORK/tap/Casks/search.rb"
@@ -38,7 +38,7 @@ head = f'''  arch arm: "", intel: "-Intel"
   sha256 arm:   "{arm}",
          intel: "{intel}"
 
-  url "https://github.com/driceroland/Search/releases/download/v#{{version}}/Search#{{arch}}.dmg"
+  url "https://github.com/Kev-sketch/Drift/releases/download/v#{{version}}/Drift#{{arch}}.dmg"
 '''
 text, found = re.subn(r'(cask "search" do\n)(.*?)(  name )', lambda m: m.group(1) + head + m.group(3), text, count=1, flags=re.S)
 if not found:
@@ -47,9 +47,9 @@ text = text.replace("  depends_on arch: :arm64\n", "")
 open(path, "w").write(text)
 PY
 if git -C "$WORK/tap" diff --quiet; then
-  echo "the tap already has Search $VERSION"
+  echo "the tap already has Drift $VERSION"
   exit 0
 fi
-git -C "$WORK/tap" commit -qam "Search $VERSION"
+git -C "$WORK/tap" commit -qam "Drift $VERSION"
 git -C "$WORK/tap" push -q
-echo "tap: Search $VERSION, sha256 $ARM (Apple Silicon), $INTEL (Intel)"
+echo "tap: Drift $VERSION, sha256 $ARM (Apple Silicon), $INTEL (Intel)"

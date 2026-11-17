@@ -8,7 +8,7 @@ For anything beyond a small fix, open an issue first describing what you want to
 
 ## New features: off until someone turns them on
 
-Search stays small by default. Anything new that changes how the browser
+Drift stays small by default. Anything new that changes how the browser
 looks or behaves — spaces, groups, a visible address bar, a new panel — is:
 
 - **minimal**: the smallest version that does the job, in the app's own quiet style;
@@ -42,4 +42,4 @@ Pull requests are reviewed by Drice, usually with Claude Code doing a first pass
 
 ## Reporting a bug
 
-Open an issue with: what you did, what you expected, what happened instead, and your macOS version. A crash log, if there is one, lives at `~/Library/Application Support/Search/crash.log` — it only ever stays on your Mac unless you paste it into the issue yourself.
+Open an issue with: what you did, what you expected, what happened instead, and your macOS version. A crash log, if there is one, lives at `~/Library/Application Support/Drift/crash.log` — it only ever stays on your Mac unless you paste it into the issue yourself.

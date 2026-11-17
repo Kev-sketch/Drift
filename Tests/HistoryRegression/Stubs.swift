@@ -68,5 +68,5 @@ enum Disk {
     }
 }
 
-/// Address.swift names Search's own pages' scheme (see InternalPages.swift).
+/// Address.swift names Drift's own pages' scheme (see InternalPages.swift).
 enum InternalPage { static let scheme = "search" }

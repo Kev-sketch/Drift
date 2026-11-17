@@ -1,4 +1,4 @@
-// Ordinary extension code, without overriding any WebKit or Search API. The
+// Ordinary extension code, without overriding any WebKit or Drift API. The
 // shim's ping listener is untouched. Withholding application replies is NOT
 // evidence of an unresponsive shim ping or a genuinely dead worker.
 const worker = Date.now() + '-' + Math.random().toString(36).slice(2);

@@ -5,11 +5,11 @@
 #
 #   ./build.sh                 debug-free release build, ad-hoc signed: runs here
 #   SEARCH_DEV=1 ./build.sh    the same as a dev build: yellow icon, named for
-#                              the branch (Search-split-view from
+#                              the branch (Drift-split-view from
 #                              claude/split-view-4a6927)
 #   SEARCH_DEV=1 SEARCH_FEATURE=name ./build.sh
-#                              the same, named Search-name
-#   ./build.sh release dmg     + build/Search.dmg, build/Search.zip and
+#                              the same, named Drift-name
+#   ./build.sh release dmg     + build/Drift.dmg, build/Drift.zip and
 #                                build/appcast.json, signed with Developer ID
 #                                if there is one in the keychain
 #   ./build.sh release ship    + both notarised, the DMG stapled
@@ -57,15 +57,15 @@ case "$ARCH" in
   x86_64) OUT="build/intel"; SUBFOLDER="/intel" ;;
   *) echo "SEARCH_ARCH is arm64 or x86_64, not “$ARCH”" >&2; exit 1 ;;
 esac
-APP="$OUT/Search.app"
-NAME="Search"
+APP="$OUT/Drift.app"
+NAME="Drift"
 # Asked for with SEARCH_DEV=1, a dev build, on a yellow plate and named for
-# the feature it's built from: "Search-split-view" in the menu bar, the Dock
+# the feature it's built from: "Drift-split-view" in the menu bar, the Dock
 # and ⌘Tab, so it's never taken for the installed app beside it, or for the
 # dev build from another worktree. Only the name people see changes. The
 # bundle id stays, so it shares the real app's settings, and so does the
-# folder, build/Search.app, which fresh.sh and the tests open. Not by
-# default: a plain ./build.sh is also the Search people here use every day
+# folder, build/Drift.app, which fresh.sh and the tests open. Not by
+# default: a plain ./build.sh is also the Drift people here use every day
 # and the release candidates. What goes in a DMG or a ZIP is never one.
 case "${SEARCH_DEV:-}" in
   0|1) DEV="$SEARCH_DEV" ;;
@@ -105,7 +105,7 @@ MINIMUM="14.0"
 SWIFTFLAGS=(-c "$CONFIG" --arch "$ARCH")
 [ "$CONFIG" = "release" ] && SWIFTFLAGS+=(-Xswiftc -Osize)
 swift build "${SWIFTFLAGS[@]}"
-BINARY="$(swift build "${SWIFTFLAGS[@]}" --show-bin-path)/Search"
+BINARY="$(swift build "${SWIFTFLAGS[@]}" --show-bin-path)/Drift"
 [ "$(lipo -archs "$BINARY")" = "$ARCH" ] || { echo "$BINARY is not a $ARCH binary" >&2; exit 1; }
 
 rm -rf "$APP"
@@ -125,14 +125,14 @@ vtool -set-build-version macos "$MINIMUM" "$SDK" -replace \
 mv "$APP/Contents/MacOS/$NAME.sdk" "$APP/Contents/MacOS/$NAME"
 # The AppleScript dictionary (Scripting.swift): read-only, tabs' addresses
 # and titles. The plist below points to it.
-cp Search.sdef "$APP/Contents/Resources/"
+cp Drift.sdef "$APP/Contents/Resources/"
 
 # Symbols stay out of the app. The linker leaves every function's name and a
 # map back to the source in the binary — 15,000 entries, more than half of
 # what the app weighed (6.5 MB of binary, 2.7 without them), and nothing the
 # app reads while it runs. They are kept beside the build instead, as a dSYM
 # that turns the addresses in a crash report back into names (Console, or
-# atos -o build/Search.app.dSYM/Contents/Resources/DWARF/Search).
+# atos -o build/Drift.app.dSYM/Contents/Resources/DWARF/Drift).
 if [ "$CONFIG" = "release" ]; then
   rm -rf "$APP.dSYM"
   dsymutil "$BINARY" -o "$APP.dSYM" 2>/dev/null || echo "no dSYM this time" >&2
@@ -183,7 +183,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleName</key><string>$NAME</string>
   <key>CFBundleDisplayName</key><string>$NAME</string>
   <key>CFBundleExecutable</key><string>$NAME</string>
-  <key>CFBundleIdentifier</key><string>com.officecommun.search</string>
+  <key>CFBundleIdentifier</key><string>com.kevsketch.drift</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>$BUILD</string>
@@ -191,10 +191,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   $ICONNAME
   <key>LSMinimumSystemVersion</key><string>$MINIMUM</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
-  <key>NSHumanReadableCopyright</key><string>© Office Commun · Search</string>
+  <key>NSHumanReadableCopyright</key><string>© Office Commun · Drift</string>
   <key>NSHighResolutionCapable</key><true/>
   <key>NSAppleScriptEnabled</key><true/>
-  <key>OSAScriptingDefinition</key><string>Search.sdef</string>
+  <key>OSAScriptingDefinition</key><string>Drift.sdef</string>
   <!-- Owning http and https is what sends a link clicked in Mail here.
        Appearing in Desktop & Dock → Default web browser also needs the
        XHTML document type below. -->
@@ -216,7 +216,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     </dict>
     <!-- macOS only lists an app under Desktop & Dock → Default web browser
          when it claims public.xhtml as well as public.html. http and https
-         alone, which Search already had, are not enough. -->
+         alone, which Drift already had, are not enough. -->
     <dict>
       <key>CFBundleTypeName</key><string>XHTML page</string>
       <key>CFBundleTypeRole</key><string>Viewer</string>
@@ -225,7 +225,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     </dict>
     <!-- What a browser shows besides pages, listed under the Finder's Open
          With (#524): a PDF, a picture, plain text (code and logs conform to
-         it), JSON. Alternate, so Search is offered there and never becomes
+         it), JSON. Alternate, so Drift is offered there and never becomes
          what opens them on a double-click. Pictures by name rather than
          public.image, which takes in SVG: an SVG can carry a script, and
          opened from the Finder it would run with its folder to read. -->
@@ -245,28 +245,28 @@ cat > "$APP/Contents/Info.plist" <<PLIST
        still wants a sentence to put in its own prompt, and touching the APIs
        without one is a crash rather than a refusal. -->
   <key>NSCameraUsageDescription</key>
-  <string>Websites you visit can ask to use your camera. Search asks you the first time each site does and keeps your answer; Settings › Privacy forgets them.</string>
+  <string>Websites you visit can ask to use your camera. Drift asks you the first time each site does and keeps your answer; Settings › Privacy forgets them.</string>
   <key>NSMicrophoneUsageDescription</key>
-  <string>Websites you visit can ask to use your microphone. Search asks you the first time each site does and keeps your answer; Settings › Privacy forgets them.</string>
+  <string>Websites you visit can ask to use your microphone. Drift asks you the first time each site does and keeps your answer; Settings › Privacy forgets them.</string>
   <!-- Location: the first key is the one macOS has always read; the second
        is the one CoreLocation's requestWhenInUseAuthorization documents.
        Same sentence in both. -->
   <key>NSLocationUsageDescription</key>
-  <string>Websites you visit can ask for your location. Search asks you each time a site does, unless you choose Always allow for it; Settings › Privacy forgets those choices.</string>
+  <string>Websites you visit can ask for your location. Drift asks you each time a site does, unless you choose Always allow for it; Settings › Privacy forgets those choices.</string>
   <key>NSLocationWhenInUseUsageDescription</key>
-  <string>Websites you visit can ask for your location. Search asks you each time a site does, unless you choose Always allow for it; Settings › Privacy forgets those choices.</string>
+  <string>Websites you visit can ask for your location. Drift asks you each time a site does, unless you choose Always allow for it; Settings › Privacy forgets those choices.</string>
   <key>NSDownloadsFolderUsageDescription</key>
   <string>Files you download are saved to your Downloads folder.</string>
   <!-- Only once you turn on Settings › Passwords › Fill in your contact
        details: your own card, never anyone else's (MeCard.swift). -->
   <key>NSContactsUsageDescription</key>
-  <string>Search fills in forms with the details on your own card in Contacts, once you pick them under a box. It reads no one else's card and saves no copy of yours.</string>
+  <string>Drift fills in forms with the details on your own card in Contacts, once you pick them under a box. It reads no one else's card and saves no copy of yours.</string>
 </dict>
 </plist>
 PLIST
 # A dev build's name, as a localised one: under the icon in the Dock, in
 # ⌘Tab and in Finder, macOS shows the bundle's folder name otherwise. The
-# plain names above stay "Search", matching the folder, since a folder named
+# plain names above stay "Drift", matching the folder, since a folder named
 # otherwise reads to macOS as renamed by hand, and then the folder wins.
 if [ "$DEV" = 1 ]; then
   mkdir -p "$APP/Contents/Resources/en.lproj"
@@ -285,17 +285,17 @@ IDENTITY="${SEARCH_SIGN_IDENTITY:-$(security find-identity -v -p codesigning 2>/
 # Developer ID provisioning profile that carries it. With the profile next to
 # this script, both go in; without it, the app is signed as before, because
 # a restricted entitlement with no profile behind it is an app that won't open.
-ENTITLEMENTS="Search.entitlements"
+ENTITLEMENTS="Drift.entitlements"
 # A release that ships without it loses passkeys and the keychain items the
 # entitled builds saved (1.0.6, build 202610241534, went out that way from a
 # worktree the git-ignored profile hadn't been copied into): ship refuses.
-if [ "$STEP" = "ship" ] && [ ! -f "Search.provisionprofile" ] && [ -z "${SEARCH_ALLOW_NO_PASSKEYS:-}" ]; then
-  echo "ship: Search.provisionprofile is missing here (it's git-ignored: copy it from the main checkout)" >&2
+if [ "$STEP" = "ship" ] && [ ! -f "Drift.provisionprofile" ] && [ -z "${SEARCH_ALLOW_NO_PASSKEYS:-}" ]; then
+  echo "ship: Drift.provisionprofile is missing here (it's git-ignored: copy it from the main checkout)" >&2
   exit 1
 fi
-if [ -f "Search.provisionprofile" ]; then
-  cp "Search.provisionprofile" "$APP/Contents/embedded.provisionprofile"
-  ENTITLEMENTS="Search.passkeys.entitlements"
+if [ -f "Drift.provisionprofile" ]; then
+  cp "Drift.provisionprofile" "$APP/Contents/embedded.provisionprofile"
+  ENTITLEMENTS="Drift.passkeys.entitlements"
   echo "passkeys: profile embedded"
 fi
 if [ -n "$IDENTITY" ]; then
@@ -369,18 +369,18 @@ if [ -f NOTES.md ]; then
 fi
 # The AI add-on's engine (engine.sh), when this release offers one: Apple
 # Silicon only for now. SEARCH_AI_ENGINE_VERSION names it — a number that
-# only goes up, as Search never takes a lower one — and the signed,
+# only goes up, as Drift never takes a lower one — and the signed,
 # notarised binary in build/engine/ goes beside the other files, under ai/,
 # with its hash and size in the feed. The feed's own signature is what
-# vouches for them; Search then checks the engine's signature itself.
+# vouches for them; Drift then checks the engine's signature itself.
 AIBLOCK=""
 write_engine() {
   local ENGINE="build/engine/search-ai-engine-arm64"
   [ "$ARCH" = "arm64" ] && [ -n "${SEARCH_AI_ENGINE_VERSION:-}" ] || return 0
   [[ "$SEARCH_AI_ENGINE_VERSION" =~ ^[0-9]+$ ]] || { echo "SEARCH_AI_ENGINE_VERSION is a whole number" >&2; exit 1; }
   [ -f "$ENGINE" ] || { echo "$ENGINE is missing — ./engine.sh arm64 makes it" >&2; exit 1; }
-  codesign --verify --strict -R='anchor apple generic and identifier "com.officecommun.search.ai-engine" and certificate leaf[subject.OU] = "7BYKA895MC"' "$ENGINE" \
-    || { echo "$ENGINE isn't signed with the Developer ID as com.officecommun.search.ai-engine" >&2; exit 1; }
+  codesign --verify --strict -R='anchor apple generic and identifier "com.kevsketch.drift.ai-engine" and certificate leaf[subject.OU] = "7BYKA895MC"' "$ENGINE" \
+    || { echo "$ENGINE isn't signed with the Developer ID as com.kevsketch.drift.ai-engine" >&2; exit 1; }
   local FILE="search-ai-engine-arm64-$SEARCH_AI_ENGINE_VERSION"
   mkdir -p "$OUT/ai"
   cp "$ENGINE" "$OUT/ai/$FILE"
@@ -414,7 +414,7 @@ JSON
     local SIGNED
     SIGNED="$(mktemp -d)"
     cp "$OUT/appcast.json" "$SIGNED/appcast.json"
-    codesign --force --timestamp --sign "$IDENTITY" --identifier com.officecommun.search.appcast "$SIGNED/appcast.json"
+    codesign --force --timestamp --sign "$IDENTITY" --identifier com.kevsketch.drift.appcast "$SIGNED/appcast.json"
     ditto -c -k --sequesterRsrc "$SIGNED/appcast.json" "$OUT/appcast.json.zip"
     rm -rf "$SIGNED"
     echo "signed: $OUT/appcast.json.zip"
